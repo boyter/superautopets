@@ -2,11 +2,18 @@ package main
 
 import (
 	"math/rand"
+	"os"
+	"runtime/pprof"
 	"testing"
 	"time"
 )
 
 func BenchmarkBattle(b *testing.B) {
+	_ = os.Remove("profile.pprof") // remove so we always get a fresh one
+	f, _ := os.Create("profile.pprof")
+	_ = pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+	
 	rand.Seed(time.Now().UnixNano())
 	log = false
 
