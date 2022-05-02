@@ -70,9 +70,9 @@ type FriendSummoned func(*Pet, []*Pet)
 
 func NothingFriendSummoned(pet *Pet, pets []*Pet) {}
 
-type BattleStart func(*Pet, []*Pet)
+type BattleStart func(pet *Pet, friends []*Pet, foes []*Pet)
 
-func NothingBattleStart(pet *Pet, pets []*Pet) {}
+func NothingBattleStart(pet *Pet, friends []*Pet, foes []*Pet) {}
 
 func CreatePet(name string) (*Pet, error) {
 	switch name {
@@ -274,18 +274,7 @@ func AntFaint(pet *Pet, pets []*Pet) {
 	}
 }
 
-func nonFaintedIndex(pets []*Pet) []int {
-	choices := []int{}
-	for i := 0; i < len(pets); i++ {
-		if !pets[i].Fainted() {
-			choices = append(choices, i)
-		}
-	}
-	return choices
-}
-
-func CricketFaint(pet *Pet, pets []*Pet) {
-}
+func CricketFaint(pet *Pet, pets []*Pet) {}
 
 func FishLevelUp(pet *Pet, pets []*Pet) {
 	// Level-up: Give all friends +1/+1
@@ -330,4 +319,18 @@ func OtterBuy(pet *Pet, pets []*Pet) {
 func HorseFriendSummoned(pet *Pet, pets []*Pet) {
 }
 
-func MosquitoBattleStart(pet *Pet, pets []*Pet) {}
+func MosquitoBattleStart(pet *Pet, friends []*Pet, foes []*Pet) {
+	// Start of battle: Deal 1 damage to a random enemy
+	choices := nonFaintedIndex(foes)
+
+	if len(choices) == 0 {
+		return
+	}
+
+	// random to attack
+	c := rand.Intn(len(choices))
+	foes[c].TakeDamage(1)
+
+	// now call its fainted function just in case
+	foes[c].faint(foes[c], foes)
+}
