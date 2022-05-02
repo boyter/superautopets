@@ -17,6 +17,18 @@ const (
 	Pig             = "pig"
 )
 
+type GameState struct {
+	round int
+	pets  []Pet
+	gold  int
+}
+
+type MutableState struct {
+	pet     *Pet
+	friends *[]Pet
+	foes    *[]Pet
+}
+
 type Pet struct {
 	tier           int
 	name           string
@@ -26,6 +38,7 @@ type Pet struct {
 	currentHealth  int
 	currentLevel   int
 	faint          Faint
+	faintBuy       FaintBuy
 	levelup        LevelUp
 	sell           Sell
 	buy            Buy
@@ -50,34 +63,35 @@ func (p *Pet) Fainted() bool {
 	return p.currentHealth <= 0
 }
 
-type Faint func(*Pet, []*Pet)
+type Faint func(state *MutableState)
+type FaintBuy func(state *MutableState)
 
-func NothingFaint(pet *Pet, pets []*Pet) {}
+func NothingFaint(state *MutableState) {}
 
-type LevelUp func(*Pet, []*Pet)
+type LevelUp func(state *MutableState)
 
-func NothingLevelUp(pet *Pet, pets []*Pet) {}
+func NothingLevelUp(state *MutableState) {}
 
-type Sell func(*Pet, []*Pet)
+type Sell func(state *MutableState)
 
-func NothingSell(pet *Pet, pets []*Pet) {}
+func NothingSell(state *MutableState) {}
 
-type Buy func(*Pet, []*Pet)
+type Buy func(state *MutableState)
 
-func NothingBuy(pet *Pet, pets []*Pet) {}
+func NothingBuy(state *MutableState) {}
 
-type FriendSummoned func(*Pet, []*Pet)
+type FriendSummoned func(state *MutableState)
 
-func NothingFriendSummoned(pet *Pet, pets []*Pet) {}
+func NothingFriendSummoned(state *MutableState) {}
 
-type BattleStart func(pet *Pet, friends []*Pet, foes []*Pet)
+type BattleStart func(state *MutableState)
 
-func NothingBattleStart(pet *Pet, friends []*Pet, foes []*Pet) {}
+func NothingBattleStart(state *MutableState) {}
 
-func CreatePet(name string) (*Pet, error) {
+func CreatePet(name string) (Pet, error) {
 	switch name {
 	case Ant:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Ant,
 			baseAttack:     2,
@@ -93,7 +107,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Fish:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Fish,
 			baseAttack:     2,
@@ -109,7 +123,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Bever:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Bever,
 			baseAttack:     2,
@@ -125,7 +139,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Otter:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Otter,
 			baseAttack:     1,
@@ -141,7 +155,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Sloth:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Sloth,
 			baseAttack:     1,
@@ -157,7 +171,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Cricket:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Cricket,
 			baseAttack:     1,
@@ -173,7 +187,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Duck:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Duck,
 			baseAttack:     1,
@@ -189,7 +203,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Horse:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Horse,
 			baseAttack:     2,
@@ -205,7 +219,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    NothingBattleStart,
 		}, nil
 	case Mosquito:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Mosquito,
 			baseAttack:     2,
@@ -221,7 +235,7 @@ func CreatePet(name string) (*Pet, error) {
 			battleStart:    MosquitoBattleStart,
 		}, nil
 	case Pig:
-		return &Pet{
+		return Pet{
 			tier:           1,
 			name:           Pig,
 			baseAttack:     3,
@@ -234,22 +248,22 @@ func CreatePet(name string) (*Pet, error) {
 			sell:           PigSell,
 			buy:            NothingBuy,
 			friendSummoned: HorseFriendSummoned,
-			battleStart:    MosquitoBattleStart,
+			battleStart:    NothingBattleStart,
 		}, nil
 	}
 
-	return &Pet{}, nil
+	return Pet{}, nil
 }
 
-func AntFaint(pet *Pet, pets []*Pet) {
-	if !pet.Fainted() { // have not fainted so return
+func AntFaint(state *MutableState) {
+	if !state.pet.Fainted() { // have not fainted so return
 		return
 	}
 
 	// Faint: Give a random friend +2/+1
 
 	// find which ones have not fainted, if any
-	choices := nonFaintedIndex(pets)
+	choices := nonFaintedIndex(*state.friends)
 
 	// if no choices return
 	if len(choices) == 0 {
@@ -258,10 +272,11 @@ func AntFaint(pet *Pet, pets []*Pet) {
 
 	// pick a random choice to buff
 	c := rand.Intn(len(choices))
-	t := pets[choices[c]]
+	p := *state.friends
+	t := p[choices[c]]
 
 	// buff the choice
-	switch pet.currentLevel {
+	switch state.pet.currentLevel {
 	case 1:
 		t.currentAttack += 2
 		t.currentHealth += 1
@@ -274,25 +289,25 @@ func AntFaint(pet *Pet, pets []*Pet) {
 	}
 }
 
-func CricketFaint(pet *Pet, pets []*Pet) {}
+func CricketFaint(state *MutableState) {}
 
-func FishLevelUp(pet *Pet, pets []*Pet) {
+func FishLevelUp(state *MutableState) {
 	// Level-up: Give all friends +1/+1
 	buff := 1
-	if pet.currentLevel > 1 {
+	if state.pet.currentLevel > 1 {
 		buff = 2
 	}
 
-	for i := 0; i < len(pets); i++ {
-		pets[i].currentHealth += buff
-		pets[i].currentAttack += buff
+	for i := 0; i < len(*state.friends); i++ {
+		(*state.friends)[i].currentHealth += buff
+		(*state.friends)[i].currentAttack += buff
 	}
 }
 
-func BeverSell(pet *Pet, pets []*Pet) {
+func BeverSell(state *MutableState) {
 	// Sell: Give two random friends +1 health
 	buff := 1
-	switch pet.currentLevel {
+	switch state.pet.currentLevel {
 	case 2:
 		buff = 2
 	case 3:
@@ -300,37 +315,44 @@ func BeverSell(pet *Pet, pets []*Pet) {
 	}
 
 	// TODO ensure its not the same friend
-	t1 := pets[rand.Intn(len(pets))]
-	t2 := pets[rand.Intn(len(pets))]
+	t1 := (*state.friends)[rand.Intn(len(*state.friends))]
+	t2 := (*state.friends)[rand.Intn(len(*state.friends))]
 
 	t1.currentHealth += buff
 	t2.currentHealth += buff
 }
 
-func DuckSell(pet *Pet, pets []*Pet) {
+func DuckSell(state *MutableState) {
 }
 
-func PigSell(pet *Pet, pets []*Pet) {
+func PigSell(state *MutableState) {
 }
 
-func OtterBuy(pet *Pet, pets []*Pet) {
+func OtterBuy(state *MutableState) {
 }
 
-func HorseFriendSummoned(pet *Pet, pets []*Pet) {
+func HorseFriendSummoned(state *MutableState) {
 }
 
-func MosquitoBattleStart(pet *Pet, friends []*Pet, foes []*Pet) {
+func MosquitoBattleStart(state *MutableState) {
 	// Start of battle: Deal 1 damage to a random enemy
-	choices := nonFaintedIndex(foes)
+	choices := nonFaintedIndex(*state.foes)
 
 	if len(choices) == 0 {
 		return
 	}
 
-	// random to attack
-	c := rand.Intn(len(choices))
-	foes[c].TakeDamage(1)
+	rand.Shuffle(len(choices), func(i, j int) {
+		choices[i], choices[j] = choices[j], choices[i]
+	})
 
+	// random to attack
+	(*state.foes)[choices[0]].TakeDamage(1)
 	// now call its fainted function just in case
-	foes[c].faint(foes[c], foes)
+	// TODO would it be cleaner to call this after?
+	(*state.foes)[choices[0]].faint(&MutableState{
+		pet:     &(*state.foes)[choices[0]],
+		friends: state.foes,
+		foes:    state.friends,
+	})
 }

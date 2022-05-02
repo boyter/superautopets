@@ -13,8 +13,8 @@ var log = true
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	var leftPets []*Pet
-	var rightPets []*Pet
+	var leftPets []Pet
+	var rightPets []Pet
 
 	pet, _ := CreatePet(Mosquito)
 	leftPets = append(leftPets, pet)
@@ -22,37 +22,53 @@ func main() {
 	pet, _ = CreatePet(Sloth)
 	rightPets = append(rightPets, pet)
 
-	Battle(leftPets, rightPets)
+	Battle(MutableState{
+		friends: &leftPets,
+		foes:    &rightPets,
+	})
 
 	fmt.Println("")
 	leftPets = randomTeam()
 	rightPets = randomTeam()
-	Battle(leftPets, rightPets)
+	Battle(MutableState{
+		friends: &leftPets,
+		foes:    &rightPets,
+	})
 }
 
-func Battle(left []*Pet, right []*Pet) {
+func Battle(state MutableState) {
 	if log {
-		printTeam(left)
-		printTeam(right)
+		printTeam(state.friends)
+		printTeam(state.foes)
 	}
 
 	// start by calling the pre abilities of each pet
-	for i := 0; i < len(left); i++ {
-		left[i].battleStart(left[i], left, right)
+	for i := 0; i < len(*state.friends); i++ {
+		(*state.friends)[i].battleStart(&MutableState{
+			pet:     &(*state.friends)[i],
+			friends: state.friends,
+			foes:    state.foes,
+		})
 	}
-	for i := 0; i < len(right); i++ {
-		right[i].battleStart(right[i], right, left)
+	for i := 0; i < len(*state.foes); i++ {
+		(*state.foes)[i].battleStart(&MutableState{
+			pet:     &(*state.foes)[i],
+			friends: state.foes,
+			foes:    state.friends,
+		})
 	}
+	// TODO we actually need to then call fainted on each, and keep going till we have no effect
+	// IE this needs to be recursive since we could have a damaged effect and so long as it keeps going...
 
 	for {
 		if log {
-			printTeam(left)
-			printTeam(right)
+			printTeam(state.friends)
+			printTeam(state.foes)
 		}
 
 		// get the first non fainted pet of each, then fight them
-		l := firstNonFainted(left)
-		r := firstNonFainted(right)
+		l := firstNonFainted(state.friends)
+		r := firstNonFainted(state.foes)
 
 		if l == nil || r == nil {
 			// TODO handle draws and who actually won
@@ -83,14 +99,22 @@ func Battle(left []*Pet, right []*Pet) {
 		}
 
 		if l.Fainted() {
-			l.faint(l, left)
+			l.faint(&MutableState{
+				pet:     l,
+				friends: state.friends,
+				foes:    state.foes,
+			})
 			if log {
 				fmt.Println(l.name, "fainted - left")
 			}
 		}
 
 		if r.Fainted() {
-			r.faint(l, right)
+			r.faint(&MutableState{
+				pet:     r,
+				friends: state.foes,
+				foes:    state.friends,
+			})
 			if log {
 				fmt.Println(r.name, "fainted - right")
 			}
@@ -100,26 +124,27 @@ func Battle(left []*Pet, right []*Pet) {
 
 // returns first non fainted pet, if the return is nil that means
 // all pets have fainted and possibly have lost the game
-func firstNonFainted(pets []*Pet) *Pet {
-	for i := 0; i < len(pets); i++ {
-		if pets[i].currentHealth > 0 {
-			return pets[i]
+func firstNonFainted(pets *[]Pet) *Pet {
+	for i := 0; i < len(*pets); i++ {
+		if (*pets)[i].currentHealth > 0 {
+			return &(*pets)[i]
 		}
 	}
 
 	return nil
 }
 
-func printTeam(pets []*Pet) {
-	for i, p := range pets {
+func printTeam(pets *[]Pet) {
+	for i, p := range *pets {
 		fmt.Println(fmt.Sprintf("pos:%v n:%v a:%v h:%v l:%v", i, p.name, p.currentAttack, p.currentHealth, p.currentLevel))
 	}
 }
 
-func nonFaintedIndex(pets []*Pet) []int {
+func nonFaintedIndex(pets []Pet) []int {
 	choices := []int{}
 	for i := 0; i < len(pets); i++ {
-		if !pets[i].Fainted() {
+		p := pets[i].Fainted()
+		if !p {
 			choices = append(choices, i)
 		}
 	}
@@ -127,7 +152,7 @@ func nonFaintedIndex(pets []*Pet) []int {
 }
 
 // creates a random team of pets
-func randomTeam() []*Pet {
+func randomTeam() []Pet {
 	petCount := rand.Intn(5) + 1
 
 	choices := []string{
@@ -143,7 +168,7 @@ func randomTeam() []*Pet {
 		Pig,
 	}
 
-	var pets []*Pet
+	var pets []Pet
 	for i := 0; i < petCount; i++ {
 		pet, _ := CreatePet(choices[rand.Intn(len(choices))])
 		pets = append(pets, pet)

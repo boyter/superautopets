@@ -2,18 +2,16 @@ package main
 
 import (
 	"math/rand"
-	"os"
-	"runtime/pprof"
 	"testing"
 	"time"
 )
 
 func BenchmarkBattle(b *testing.B) {
-	_ = os.Remove("profile.pprof") // remove so we always get a fresh one
-	f, _ := os.Create("profile.pprof")
-	_ = pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-	
+	//_ = os.Remove("profile.pprof") // remove so we always get a fresh one
+	//f, _ := os.Create("profile.pprof")
+	//_ = pprof.StartCPUProfile(f)
+	//defer pprof.StopCPUProfile()
+
 	rand.Seed(time.Now().UnixNano())
 	log = false
 
@@ -22,6 +20,9 @@ func BenchmarkBattle(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Battle(leftPets, rightPets)
+		Battle(MutableState{
+			friends: &leftPets,
+			foes:    &rightPets,
+		})
 	}
 }
