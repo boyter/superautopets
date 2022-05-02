@@ -1,20 +1,36 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
+const (
+	Ant      string = "ant"
+	Fish            = "fish"
+	Bever           = "bever"
+	Otter           = "otter"
+	Sloth           = "sloth"
+	Cricket         = "cricket"
+	Duck            = "duck"
+	Horse           = "horse"
+	Mosquito        = "mosquito"
+	Pig             = "pig"
+)
+
 type Pet struct {
-	name          string
-	baseAttack    int
-	baseHealth    int
-	currentAttack int
-	currentHealth int
-	currentLevel  int
-	faint         Faint
-	levelup       LevelUp
-	sell          Sell
+	tier           int
+	name           string
+	baseAttack     int
+	baseHealth     int
+	currentAttack  int
+	currentHealth  int
+	currentLevel   int
+	faint          Faint
+	levelup        LevelUp
+	sell           Sell
+	buy            Buy
+	friendSummoned FriendSummoned
+	battleStart    BattleStart
 }
 
 func (p *Pet) CurrentAttack() int {
@@ -46,43 +62,179 @@ type Sell func(*Pet, []*Pet)
 
 func NothingSell(pet *Pet, pets []*Pet) {}
 
+type Buy func(*Pet, []*Pet)
+
+func NothingBuy(pet *Pet, pets []*Pet) {}
+
+type FriendSummoned func(*Pet, []*Pet)
+
+func NothingFriendSummoned(pet *Pet, pets []*Pet) {}
+
+type BattleStart func(*Pet, []*Pet)
+
+func NothingBattleStart(pet *Pet, pets []*Pet) {}
+
 func CreatePet(name string) (*Pet, error) {
 	switch name {
-	case "ant":
+	case Ant:
 		return &Pet{
-			name:          name,
-			baseAttack:    2,
-			baseHealth:    1,
-			currentAttack: 2,
-			currentHealth: 1,
-			currentLevel:  1,
-			faint:         AntFaint,
-			levelup:       NothingLevelUp,
-			sell:          NothingSell,
+			tier:           1,
+			name:           Ant,
+			baseAttack:     2,
+			baseHealth:     1,
+			currentAttack:  2,
+			currentHealth:  1,
+			currentLevel:   1,
+			faint:          AntFaint,
+			levelup:        NothingLevelUp,
+			sell:           NothingSell,
+			buy:            NothingBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
 		}, nil
-	case "fish":
+	case Fish:
 		return &Pet{
-			name:          name,
-			baseAttack:    2,
-			baseHealth:    3,
-			currentAttack: 2,
-			currentHealth: 3,
-			currentLevel:  1,
-			faint:         NothingFaint,
-			levelup:       FishLevelUp,
-			sell:          NothingSell,
+			tier:           1,
+			name:           Fish,
+			baseAttack:     2,
+			baseHealth:     3,
+			currentAttack:  2,
+			currentHealth:  3,
+			currentLevel:   1,
+			faint:          NothingFaint,
+			levelup:        FishLevelUp,
+			sell:           NothingSell,
+			buy:            NothingBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
 		}, nil
-	case "bever":
+	case Bever:
 		return &Pet{
-			name:          name,
-			baseAttack:    2,
-			baseHealth:    2,
-			currentAttack: 2,
-			currentHealth: 2,
-			currentLevel:  1,
-			faint:         NothingFaint,
-			levelup:       NothingLevelUp,
-			sell:          BeverSell,
+			tier:           1,
+			name:           Bever,
+			baseAttack:     2,
+			baseHealth:     2,
+			currentAttack:  2,
+			currentHealth:  2,
+			currentLevel:   1,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           BeverSell,
+			buy:            NothingBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
+		}, nil
+	case Otter:
+		return &Pet{
+			tier:           1,
+			name:           Otter,
+			baseAttack:     1,
+			baseHealth:     2,
+			currentAttack:  1,
+			currentHealth:  2,
+			currentLevel:   1,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           NothingSell,
+			buy:            OtterBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
+		}, nil
+	case Sloth:
+		return &Pet{
+			tier:           1,
+			name:           Sloth,
+			baseAttack:     1,
+			baseHealth:     1,
+			currentAttack:  1,
+			currentHealth:  1,
+			currentLevel:   1,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           NothingSell,
+			buy:            NothingBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
+		}, nil
+	case Cricket:
+		return &Pet{
+			tier:           1,
+			name:           Cricket,
+			baseAttack:     1,
+			baseHealth:     2,
+			currentAttack:  1,
+			currentHealth:  2,
+			currentLevel:   1,
+			faint:          CricketFaint,
+			levelup:        NothingLevelUp,
+			sell:           NothingSell,
+			buy:            NothingBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
+		}, nil
+	case Duck:
+		return &Pet{
+			tier:           1,
+			name:           Duck,
+			baseAttack:     1,
+			baseHealth:     3,
+			currentAttack:  1,
+			currentHealth:  3,
+			currentLevel:   1,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           DuckSell,
+			buy:            NothingBuy,
+			friendSummoned: NothingFriendSummoned,
+			battleStart:    NothingBattleStart,
+		}, nil
+	case Horse:
+		return &Pet{
+			tier:           1,
+			name:           Horse,
+			baseAttack:     2,
+			baseHealth:     1,
+			currentAttack:  2,
+			currentHealth:  1,
+			currentLevel:   1,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           NothingSell,
+			buy:            NothingBuy,
+			friendSummoned: HorseFriendSummoned,
+			battleStart:    NothingBattleStart,
+		}, nil
+	case Mosquito:
+		return &Pet{
+			tier:           1,
+			name:           Mosquito,
+			baseAttack:     2,
+			baseHealth:     2,
+			currentAttack:  2,
+			currentHealth:  2,
+			currentLevel:   2,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           NothingSell,
+			buy:            NothingBuy,
+			friendSummoned: HorseFriendSummoned,
+			battleStart:    MosquitoBattleStart,
+		}, nil
+	case Pig:
+		return &Pet{
+			tier:           1,
+			name:           Pig,
+			baseAttack:     3,
+			baseHealth:     1,
+			currentAttack:  3,
+			currentHealth:  1,
+			currentLevel:   2,
+			faint:          NothingFaint,
+			levelup:        NothingLevelUp,
+			sell:           PigSell,
+			buy:            NothingBuy,
+			friendSummoned: HorseFriendSummoned,
+			battleStart:    MosquitoBattleStart,
 		}, nil
 	}
 
@@ -90,10 +242,25 @@ func CreatePet(name string) (*Pet, error) {
 }
 
 func AntFaint(pet *Pet, pets []*Pet) {
-	// Faint: Give a random friend +2/+1
-	// TODO ignore this pet, or any other that has fainted
-	t := pets[rand.Intn(len(pets))]
+	if !pet.Fainted() { // have not fainted so return
+		return
+	}
 
+	// Faint: Give a random friend +2/+1
+
+	// find which ones have not fainted, if any
+	choices := nonFaintedIndex(pets)
+
+	// if no choices return
+	if len(choices) == 0 {
+		return
+	}
+
+	// pick a random choice to buff
+	c := rand.Intn(len(choices))
+	t := pets[choices[c]]
+
+	// buff the choice
 	switch pet.currentLevel {
 	case 1:
 		t.currentAttack += 2
@@ -105,6 +272,19 @@ func AntFaint(pet *Pet, pets []*Pet) {
 		t.currentAttack += 6
 		t.currentHealth += 3
 	}
+}
+
+func nonFaintedIndex(pets []*Pet) []int {
+	choices := []int{}
+	for i := 0; i < len(pets); i++ {
+		if !pets[i].Fainted() {
+			choices = append(choices, i)
+		}
+	}
+	return choices
+}
+
+func CricketFaint(pet *Pet, pets []*Pet) {
 }
 
 func FishLevelUp(pet *Pet, pets []*Pet) {
@@ -130,5 +310,24 @@ func BeverSell(pet *Pet, pets []*Pet) {
 		buff = 3
 	}
 
-	fmt.Println(buff)
+	// TODO ensure its not the same friend
+	t1 := pets[rand.Intn(len(pets))]
+	t2 := pets[rand.Intn(len(pets))]
+
+	t1.currentHealth += buff
+	t2.currentHealth += buff
 }
+
+func DuckSell(pet *Pet, pets []*Pet) {
+}
+
+func PigSell(pet *Pet, pets []*Pet) {
+}
+
+func OtterBuy(pet *Pet, pets []*Pet) {
+}
+
+func HorseFriendSummoned(pet *Pet, pets []*Pet) {
+}
+
+func MosquitoBattleStart(pet *Pet, pets []*Pet) {}

@@ -2,21 +2,25 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	var leftPets []*Pet
 	var rightPets []*Pet
 
-	pet, _ := CreatePet("ant")
-	leftPets = append(leftPets, pet)
-	pet, _ = CreatePet("ant")
+	pet, _ := CreatePet(Ant)
 	leftPets = append(leftPets, pet)
 
-	pet, _ = CreatePet("fish")
+	pet, _ = CreatePet(Duck)
 	rightPets = append(rightPets, pet)
 
 	Battle(leftPets, rightPets)
+
 }
 
 func Battle(left []*Pet, right []*Pet) {
@@ -40,6 +44,9 @@ func Battle(left []*Pet, right []*Pet) {
 			return
 		}
 
+		printTeam(left)
+		printTeam(right)
+
 		// now we fight! both at the same time more or less
 		// but keep in mind we need to apply modifiers at some point
 		for !l.Fainted() && !r.Fainted() {
@@ -48,10 +55,13 @@ func Battle(left []*Pet, right []*Pet) {
 		}
 
 		if l.Fainted() {
-			fmt.Println(l.name, "fainted")
+			l.faint(l, left)
+			fmt.Println(l.name, "fainted - left")
 		}
+
 		if r.Fainted() {
-			fmt.Println(r.name, "fainted")
+			r.faint(l, right)
+			fmt.Println(r.name, "fainted - right")
 		}
 	}
 }
@@ -66,4 +76,10 @@ func firstNonFainted(pets []*Pet) *Pet {
 	}
 
 	return nil
+}
+
+func printTeam(pets []*Pet) {
+	for i, p := range pets {
+		fmt.Println(fmt.Sprintf("pos:%v n:%v a:%v h:%v l:%v", i, p.name, p.currentAttack, p.currentHealth, p.currentLevel))
+	}
 }
