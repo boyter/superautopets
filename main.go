@@ -16,10 +16,10 @@ func main() {
 	var leftPets []Pet
 	var rightPets []Pet
 
-	pet, _ := CreatePet(Mosquito)
+	pet, _ := CreatePet(Cricket)
 	leftPets = append(leftPets, pet)
 
-	pet, _ = CreatePet(Sloth)
+	pet, _ = CreatePet(Fish)
 	rightPets = append(rightPets, pet)
 
 	Battle(MutableState{
@@ -27,19 +27,20 @@ func main() {
 		foes:    &rightPets,
 	})
 
-	fmt.Println("")
-	leftPets = randomTeam()
-	rightPets = randomTeam()
-	Battle(MutableState{
-		friends: &leftPets,
-		foes:    &rightPets,
-	})
+	//fmt.Println("")
+	//leftPets = randomTeam()
+	//rightPets = randomTeam()
+	//Battle(MutableState{
+	//	friends: &leftPets,
+	//	foes:    &rightPets,
+	//})
 }
 
 func Battle(state MutableState) {
 	if log {
 		printTeam(state.friends)
 		printTeam(state.foes)
+		fmt.Println()
 	}
 
 	// start by calling the pre abilities of each pet
@@ -64,6 +65,7 @@ func Battle(state MutableState) {
 		if log {
 			printTeam(state.friends)
 			printTeam(state.foes)
+			fmt.Println()
 		}
 
 		// get the first non fainted pet of each, then fight them
@@ -74,13 +76,13 @@ func Battle(state MutableState) {
 			// TODO handle draws and who actually won
 			if l == nil && r != nil {
 				if log {
-					fmt.Println("left lost")
+					fmt.Println("friends lost")
 				}
 				return
 			}
 			if l != nil && r == nil {
 				if log {
-					fmt.Println("right lost")
+					fmt.Println("foes lost")
 				}
 				return
 			}
@@ -104,9 +106,6 @@ func Battle(state MutableState) {
 				friends: state.friends,
 				foes:    state.foes,
 			})
-			if log {
-				fmt.Println(l.name, "fainted - left")
-			}
 		}
 
 		if r.Fainted() {
@@ -115,9 +114,6 @@ func Battle(state MutableState) {
 				friends: state.foes,
 				foes:    state.friends,
 			})
-			if log {
-				fmt.Println(r.name, "fainted - right")
-			}
 		}
 	}
 }

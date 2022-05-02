@@ -5,16 +5,17 @@ import (
 )
 
 const (
-	Ant      string = "ant"
-	Fish            = "fish"
-	Bever           = "bever"
-	Otter           = "otter"
-	Sloth           = "sloth"
-	Cricket         = "cricket"
-	Duck            = "duck"
-	Horse           = "horse"
-	Mosquito        = "mosquito"
-	Pig             = "pig"
+	Ant           string = "ant"
+	Fish                 = "fish"
+	Bever                = "bever"
+	Otter                = "otter"
+	Sloth                = "sloth"
+	Cricket              = "cricket"
+	ZombieCricket        = "zombiecricket"
+	Duck                 = "duck"
+	Horse                = "horse"
+	Mosquito             = "mosquito"
+	Pig                  = "pig"
 )
 
 type GameState struct {
@@ -289,7 +290,17 @@ func AntFaint(state *MutableState) {
 	}
 }
 
-func CricketFaint(state *MutableState) {}
+func CricketFaint(state *MutableState) {
+	if !state.pet.Fainted() { // have not fainted so return
+		return
+	}
+
+	// update so that this pet becomes a 1/1 zombie cricket
+	state.pet.name = ZombieCricket
+	state.pet.currentAttack = 1
+	state.pet.currentHealth = 1
+	state.pet.faint = NothingFaint
+}
 
 func FishLevelUp(state *MutableState) {
 	// Level-up: Give all friends +1/+1
@@ -322,11 +333,9 @@ func BeverSell(state *MutableState) {
 	t2.currentHealth += buff
 }
 
-func DuckSell(state *MutableState) {
-}
+func DuckSell(state *MutableState) {}
 
-func PigSell(state *MutableState) {
-}
+func PigSell(state *MutableState) {}
 
 func OtterBuy(state *MutableState) {
 }
