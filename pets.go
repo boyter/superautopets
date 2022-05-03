@@ -39,6 +39,7 @@ type Pet struct {
 	currentHealth  int
 	currentLevel   int
 	faint          Faint
+	faintCalled    bool
 	faintBuy       FaintBuy
 	levelup        LevelUp
 	sell           Sell
@@ -64,10 +65,10 @@ func (p *Pet) Fainted() bool {
 	return p.currentHealth <= 0
 }
 
-type Faint func(state *MutableState)
+type Faint func(state *MutableState) bool
 type FaintBuy func(state *MutableState)
 
-func NothingFaint(state *MutableState) {}
+func NothingFaint(state *MutableState) bool { return false }
 
 type LevelUp func(state *MutableState)
 
@@ -85,9 +86,9 @@ type FriendSummoned func(state *MutableState)
 
 func NothingFriendSummoned(state *MutableState) {}
 
-type BattleStart func(state *MutableState)
+type BattleStart func(state *MutableState) bool
 
-func NothingBattleStart(state *MutableState) {}
+func NothingBattleStart(state *MutableState) bool { return false }
 
 func CreatePet(name string) (Pet, error) {
 	switch name {
@@ -256,9 +257,12 @@ func CreatePet(name string) (Pet, error) {
 	return Pet{}, nil
 }
 
-func AntFaint(state *MutableState) {
+func AntFaint(state *MutableState) bool {
 	if !state.pet.Fainted() { // have not fainted so return
-		return
+		return false
+	}
+	if state.pet.faintCalled { // already fainted
+		return false
 	}
 
 	// Faint: Give a random friend +2/+1
@@ -268,7 +272,7 @@ func AntFaint(state *MutableState) {
 
 	// if no choices return
 	if len(choices) == 0 {
-		return
+		return false
 	}
 
 	// pick a random choice to buff
@@ -288,18 +292,29 @@ func AntFaint(state *MutableState) {
 		t.currentAttack += 6
 		t.currentHealth += 3
 	}
+
+	state.pet.faintCalled = true
+	return true
 }
 
-func CricketFaint(state *MutableState) {
+func CricketFaint(state *MutableState) bool {
 	if !state.pet.Fainted() { // have not fainted so return
-		return
+		return false
 	}
+	if state.pet.faintCalled { // already fainted
+		return false
+	}
+
+	// Faint: Summon a 1/1 Cricket
 
 	// update so that this pet becomes a 1/1 zombie cricket
 	state.pet.name = ZombieCricket
 	state.pet.currentAttack = 1
 	state.pet.currentHealth = 1
 	state.pet.faint = NothingFaint
+	state.pet.faintCalled = true
+
+	return true
 }
 
 func FishLevelUp(state *MutableState) {
@@ -337,18 +352,17 @@ func DuckSell(state *MutableState) {}
 
 func PigSell(state *MutableState) {}
 
-func OtterBuy(state *MutableState) {
-}
+func OtterBuy(state *MutableState) {}
 
 func HorseFriendSummoned(state *MutableState) {
 }
 
-func MosquitoBattleStart(state *MutableState) {
+func MosquitoBattleStart(state *MutableState) bool {
 	// Start of battle: Deal 1 damage to a random enemy
 	choices := nonFaintedIndex(*state.foes)
 
 	if len(choices) == 0 {
-		return
+		return false
 	}
 
 	rand.Shuffle(len(choices), func(i, j int) {
@@ -364,4 +378,6 @@ func MosquitoBattleStart(state *MutableState) {
 		friends: state.foes,
 		foes:    state.friends,
 	})
+
+	return true
 }

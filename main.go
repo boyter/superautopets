@@ -16,10 +16,12 @@ func main() {
 	var leftPets []Pet
 	var rightPets []Pet
 
-	pet, _ := CreatePet(Cricket)
+	pet, _ := CreatePet(Mosquito)
+	leftPets = append(leftPets, pet)
+	pet, _ = CreatePet(Mosquito)
 	leftPets = append(leftPets, pet)
 
-	pet, _ = CreatePet(Fish)
+	pet, _ = CreatePet(Cricket)
 	rightPets = append(rightPets, pet)
 
 	Battle(MutableState{
@@ -27,13 +29,15 @@ func main() {
 		foes:    &rightPets,
 	})
 
-	//fmt.Println("")
-	//leftPets = randomTeam()
-	//rightPets = randomTeam()
-	//Battle(MutableState{
-	//	friends: &leftPets,
-	//	foes:    &rightPets,
-	//})
+	for i := 0; i < 1000; i++ {
+		fmt.Println("")
+		leftPets = randomTeam()
+		rightPets = randomTeam()
+		Battle(MutableState{
+			friends: &leftPets,
+			foes:    &rightPets,
+		})
+	}
 }
 
 func Battle(state MutableState) {
@@ -43,23 +47,57 @@ func Battle(state MutableState) {
 		fmt.Println()
 	}
 
+	hadEffect := false
 	// start by calling the pre abilities of each pet
 	for i := 0; i < len(*state.friends); i++ {
-		(*state.friends)[i].battleStart(&MutableState{
+		t := (*state.friends)[i].battleStart(&MutableState{
 			pet:     &(*state.friends)[i],
 			friends: state.friends,
 			foes:    state.foes,
 		})
+
+		if t {
+			hadEffect = true
+		}
 	}
 	for i := 0; i < len(*state.foes); i++ {
-		(*state.foes)[i].battleStart(&MutableState{
+		t := (*state.foes)[i].battleStart(&MutableState{
 			pet:     &(*state.foes)[i],
 			friends: state.foes,
 			foes:    state.friends,
 		})
+
+		if t {
+			hadEffect = true
+		}
 	}
-	// TODO we actually need to then call fainted on each, and keep going till we have no effect
-	// IE this needs to be recursive since we could have a damaged effect and so long as it keeps going...
+
+	for hadEffect {
+		hadEffect = false
+		for i := 0; i < len(*state.friends); i++ {
+			t := (*state.friends)[i].faint(&MutableState{
+				pet:     &(*state.friends)[i],
+				friends: state.friends,
+				foes:    state.foes,
+			})
+
+			if t {
+				hadEffect = true
+			}
+		}
+
+		for i := 0; i < len(*state.foes); i++ {
+			t := (*state.foes)[i].faint(&MutableState{
+				pet:     &(*state.foes)[i],
+				friends: state.foes,
+				foes:    state.friends,
+			})
+
+			if t {
+				hadEffect = true
+			}
+		}
+	}
 
 	for {
 		if log {
