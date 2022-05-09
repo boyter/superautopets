@@ -20,7 +20,7 @@ func BenchmarkBattle(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Battle(MutableState{
+		Battle(BattleMutableState{
 			friends: &leftPets,
 			foes:    &rightPets,
 		})

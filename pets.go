@@ -18,13 +18,7 @@ const (
 	Pig                  = "pig"
 )
 
-type GameState struct {
-	round int
-	pets  []Pet
-	gold  int
-}
-
-type MutableState struct {
+type BattleMutableState struct {
 	pet     *Pet
 	friends *[]Pet
 	foes    *[]Pet
@@ -65,30 +59,40 @@ func (p *Pet) Fainted() bool {
 	return p.currentHealth <= 0
 }
 
-type Faint func(state *MutableState) bool
-type FaintBuy func(state *MutableState)
+type Faint func(state *BattleMutableState) bool
+type FaintBuy func(state *BattleMutableState)
 
-func NothingFaint(state *MutableState) bool { return false }
+func NothingFaint(state *BattleMutableState) bool { return false }
 
-type LevelUp func(state *MutableState)
+type LevelUp func(state *BattleMutableState)
 
-func NothingLevelUp(state *MutableState) {}
+func NothingLevelUp(state *BattleMutableState) {}
 
-type Sell func(state *MutableState)
+type Sell func(state *BattleMutableState)
 
-func NothingSell(state *MutableState) {}
+func NothingSell(state *BattleMutableState) {}
 
-type Buy func(state *MutableState)
+type Buy func(state *BattleMutableState)
 
-func NothingBuy(state *MutableState) {}
+func NothingBuy(state *BattleMutableState) {}
 
-type FriendSummoned func(state *MutableState)
+type FriendSummoned func(state *BattleMutableState)
 
-func NothingFriendSummoned(state *MutableState) {}
+func NothingFriendSummoned(state *BattleMutableState) {}
 
-type BattleStart func(state *MutableState) bool
+type BattleStart func(state *BattleMutableState) bool
 
-func NothingBattleStart(state *MutableState) bool { return false }
+func NothingBattleStart(state *BattleMutableState) bool { return false }
+
+func RandomPet(level int) (Pet, error) {
+	choices := []string{Ant, Fish, Bever, Otter, Cricket, Duck, Horse, Mosquito, Pig}
+
+	rand.Shuffle(len(choices), func(i, j int) {
+		choices[i], choices[j] = choices[j], choices[i]
+	})
+
+	return CreatePet(choices[0])
+}
 
 func CreatePet(name string) (Pet, error) {
 	switch name {
@@ -257,7 +261,7 @@ func CreatePet(name string) (Pet, error) {
 	return Pet{}, nil
 }
 
-func AntFaint(state *MutableState) bool {
+func AntFaint(state *BattleMutableState) bool {
 	if !state.pet.Fainted() { // have not fainted so return
 		return false
 	}
@@ -297,7 +301,7 @@ func AntFaint(state *MutableState) bool {
 	return true
 }
 
-func CricketFaint(state *MutableState) bool {
+func CricketFaint(state *BattleMutableState) bool {
 	if !state.pet.Fainted() { // have not fainted so return
 		return false
 	}
@@ -317,7 +321,7 @@ func CricketFaint(state *MutableState) bool {
 	return true
 }
 
-func FishLevelUp(state *MutableState) {
+func FishLevelUp(state *BattleMutableState) {
 	// Level-up: Give all friends +1/+1
 	buff := 1
 	if state.pet.currentLevel > 1 {
@@ -330,7 +334,7 @@ func FishLevelUp(state *MutableState) {
 	}
 }
 
-func BeverSell(state *MutableState) {
+func BeverSell(state *BattleMutableState) {
 	// Sell: Give two random friends +1 health
 	buff := 1
 	switch state.pet.currentLevel {
@@ -348,16 +352,16 @@ func BeverSell(state *MutableState) {
 	t2.currentHealth += buff
 }
 
-func DuckSell(state *MutableState) {}
+func DuckSell(state *BattleMutableState) {}
 
-func PigSell(state *MutableState) {}
+func PigSell(state *BattleMutableState) {}
 
-func OtterBuy(state *MutableState) {}
+func OtterBuy(state *BattleMutableState) {}
 
-func HorseFriendSummoned(state *MutableState) {
+func HorseFriendSummoned(state *BattleMutableState) {
 }
 
-func MosquitoBattleStart(state *MutableState) bool {
+func MosquitoBattleStart(state *BattleMutableState) bool {
 	// Start of battle: Deal 1 damage to a random enemy
 	choices := nonFaintedIndex(*state.foes)
 
@@ -373,7 +377,7 @@ func MosquitoBattleStart(state *MutableState) bool {
 	(*state.foes)[choices[0]].TakeDamage(1)
 	// now call its fainted function just in case
 	// TODO would it be cleaner to call this after?
-	(*state.foes)[choices[0]].faint(&MutableState{
+	(*state.foes)[choices[0]].faint(&BattleMutableState{
 		pet:     &(*state.foes)[choices[0]],
 		friends: state.foes,
 		foes:    state.friends,
