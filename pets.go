@@ -24,6 +24,19 @@ type BattleMutableState struct {
 	foes    *[]Pet
 }
 
+// Pet
+// https://www.slythergames.com/2021/11/17/super-auto-pets-how-to-level-up/
+// Level 1 to 2 is three pets total. This includes the starting one and then two more.
+// Level 2 to 3 is six pets total. This includes three at level 2 and then three more on top (assuming these ones are level 1).
+// Level 3 is the max so you can no longer gain experience.
+//
+// When you combine two of the same animal, the game will add +1 to the higher of both the health and attack stat.
+// For example, if you combine a 3/1 Pig with a 4/2 Pig, the result will be a 5/3 Pig.
+// Experience points combine linearly, meaning you just add the total number of XP between the two pets.
+// If the sum of this experience triggers a level-up, you’ll get your +1 Tier pet bonus in the shop!
+//
+// If both pets have items, you will lose the item from the animal being dragged over.
+// Put differently, the animal that receives an upgrade will keep its food.
 type Pet struct {
 	tier           int
 	name           string
@@ -32,6 +45,7 @@ type Pet struct {
 	currentAttack  int
 	currentHealth  int
 	currentLevel   int
+	experience     int
 	faint          Faint
 	faintCalled    bool
 	faintBuy       FaintBuy
@@ -105,6 +119,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  2,
 			currentHealth:  1,
 			currentLevel:   1,
+			experience:     0,
 			faint:          AntFaint,
 			levelup:        NothingLevelUp,
 			sell:           NothingSell,
@@ -121,6 +136,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  2,
 			currentHealth:  3,
 			currentLevel:   1,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        FishLevelUp,
 			sell:           NothingSell,
@@ -137,6 +153,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  2,
 			currentHealth:  2,
 			currentLevel:   1,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           BeverSell,
@@ -153,6 +170,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  1,
 			currentHealth:  2,
 			currentLevel:   1,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           NothingSell,
@@ -169,6 +187,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  1,
 			currentHealth:  1,
 			currentLevel:   1,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           NothingSell,
@@ -185,6 +204,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  1,
 			currentHealth:  2,
 			currentLevel:   1,
+			experience:     0,
 			faint:          CricketFaint,
 			levelup:        NothingLevelUp,
 			sell:           NothingSell,
@@ -201,6 +221,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  1,
 			currentHealth:  3,
 			currentLevel:   1,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           DuckSell,
@@ -217,6 +238,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  2,
 			currentHealth:  1,
 			currentLevel:   1,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           NothingSell,
@@ -233,6 +255,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  2,
 			currentHealth:  2,
 			currentLevel:   2,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           NothingSell,
@@ -249,6 +272,7 @@ func CreatePet(name string) (Pet, error) {
 			currentAttack:  3,
 			currentHealth:  1,
 			currentLevel:   2,
+			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
 			sell:           PigSell,

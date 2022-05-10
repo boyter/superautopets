@@ -1,4 +1,5 @@
 // https://superauto.pet
+// https://twoaveragegamers.com/ultimate-guide-to-super-auto-pets-game-mechanics/
 
 package main
 
