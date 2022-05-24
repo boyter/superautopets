@@ -25,7 +25,10 @@ func main() {
 	pet, _ = CreatePet(Cricket)
 	rightPets = append(rightPets, pet)
 
-	Battle(BattleMutableState{
+	// if we were doing shop we would want to clone
+	// the pets here
+
+	Battle(BattleState{
 		friends: &leftPets,
 		foes:    &rightPets,
 	})
@@ -34,7 +37,7 @@ func main() {
 		fmt.Println("")
 		leftPets = randomTeam()
 		rightPets = randomTeam()
-		Battle(BattleMutableState{
+		Battle(BattleState{
 			friends: &leftPets,
 			foes:    &rightPets,
 		})

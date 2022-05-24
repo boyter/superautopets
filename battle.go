@@ -9,7 +9,7 @@ import (
 // all pets have fainted and possibly have lost the game
 func firstNonFainted(pets *[]Pet) *Pet {
 	for i := 0; i < len(*pets); i++ {
-		if (*pets)[i].currentHealth > 0 {
+		if (*pets)[i].baseHealth > 0 {
 			return &(*pets)[i]
 		}
 	}
@@ -19,7 +19,7 @@ func firstNonFainted(pets *[]Pet) *Pet {
 
 func printTeam(pets *[]Pet) {
 	for i, p := range *pets {
-		fmt.Println(fmt.Sprintf("pos:%v n:%v a:%v h:%v l:%v", i, p.name, p.currentAttack, p.currentHealth, p.currentLevel))
+		fmt.Println(fmt.Sprintf("pos:%v n:%v a:%v h:%v l:%v", i, p.name, p.baseAttack, p.baseHealth, p.currentLevel))
 	}
 }
 
@@ -43,7 +43,6 @@ func randomTeam() []Pet {
 		Fish,
 		Bever,
 		Otter,
-		Sloth,
 		Cricket,
 		Duck,
 		Horse,
@@ -53,14 +52,21 @@ func randomTeam() []Pet {
 
 	var pets []Pet
 	for i := 0; i < petCount; i++ {
-		pet, _ := CreatePet(choices[rand.Intn(len(choices))])
+		var pet Pet
+		// stupidly low chance to get sloth
+		if rand.Intn(10_000) == 1 {
+			pet, _ = CreatePet(Sloth)
+		} else {
+			pet, _ = CreatePet(choices[rand.Intn(len(choices))])
+		}
+
 		pets = append(pets, pet)
 	}
 
 	return pets
 }
 
-func Battle(state BattleMutableState) {
+func Battle(state BattleState) {
 	if log {
 		printTeam(state.friends)
 		printTeam(state.foes)
@@ -70,7 +76,7 @@ func Battle(state BattleMutableState) {
 	hadEffect := false
 	// start by calling the pre abilities of each pet
 	for i := 0; i < len(*state.friends); i++ {
-		t := (*state.friends)[i].battleStart(&BattleMutableState{
+		t := (*state.friends)[i].battleStart(&BattleState{
 			pet:     &(*state.friends)[i],
 			friends: state.friends,
 			foes:    state.foes,
@@ -81,7 +87,7 @@ func Battle(state BattleMutableState) {
 		}
 	}
 	for i := 0; i < len(*state.foes); i++ {
-		t := (*state.foes)[i].battleStart(&BattleMutableState{
+		t := (*state.foes)[i].battleStart(&BattleState{
 			pet:     &(*state.foes)[i],
 			friends: state.foes,
 			foes:    state.friends,
@@ -95,7 +101,7 @@ func Battle(state BattleMutableState) {
 	for hadEffect {
 		hadEffect = false
 		for i := 0; i < len(*state.friends); i++ {
-			t := (*state.friends)[i].faint(&BattleMutableState{
+			t := (*state.friends)[i].faint(&BattleState{
 				pet:     &(*state.friends)[i],
 				friends: state.friends,
 				foes:    state.foes,
@@ -107,7 +113,7 @@ func Battle(state BattleMutableState) {
 		}
 
 		for i := 0; i < len(*state.foes); i++ {
-			t := (*state.foes)[i].faint(&BattleMutableState{
+			t := (*state.foes)[i].faint(&BattleState{
 				pet:     &(*state.foes)[i],
 				friends: state.foes,
 				foes:    state.friends,
@@ -159,7 +165,7 @@ func Battle(state BattleMutableState) {
 		}
 
 		if l.Fainted() {
-			l.faint(&BattleMutableState{
+			l.faint(&BattleState{
 				pet:     l,
 				friends: state.friends,
 				foes:    state.foes,
@@ -167,7 +173,7 @@ func Battle(state BattleMutableState) {
 		}
 
 		if r.Fainted() {
-			r.faint(&BattleMutableState{
+			r.faint(&BattleState{
 				pet:     r,
 				friends: state.foes,
 				foes:    state.friends,

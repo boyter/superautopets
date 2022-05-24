@@ -18,7 +18,9 @@ const (
 	Pig                  = "pig"
 )
 
-type BattleMutableState struct {
+// BattleState represents the state of a battle, where we can change anything
+// without affect
+type BattleState struct {
 	pet     *Pet
 	friends *[]Pet
 	foes    *[]Pet
@@ -42,8 +44,6 @@ type Pet struct {
 	name           string
 	baseAttack     int
 	baseHealth     int
-	currentAttack  int
-	currentHealth  int
 	currentLevel   int
 	experience     int
 	faint          Faint
@@ -58,45 +58,45 @@ type Pet struct {
 
 func (p *Pet) CurrentAttack() int {
 	// TODO must include modifiers here
-	return p.currentAttack
+	return p.baseAttack
 }
 
 func (p *Pet) TakeDamage(damage int) {
 	// TODO must include modifiers here
-	p.currentHealth -= damage
-	if p.currentHealth < 0 {
-		p.currentHealth = 0
+	p.baseHealth -= damage
+	if p.baseHealth < 0 {
+		p.baseHealth = 0
 	}
 }
 
 func (p *Pet) Fainted() bool {
-	return p.currentHealth <= 0
+	return p.baseHealth <= 0
 }
 
-type Faint func(state *BattleMutableState) bool
-type FaintBuy func(state *BattleMutableState)
+type Faint func(state *BattleState) bool
+type FaintBuy func(state *BattleState)
 
-func NothingFaint(state *BattleMutableState) bool { return false }
+func NothingFaint(state *BattleState) bool { return false }
 
-type LevelUp func(state *BattleMutableState)
+type LevelUp func(state *BattleState)
 
-func NothingLevelUp(state *BattleMutableState) {}
+func NothingLevelUp(state *BattleState) {}
 
-type Sell func(state *BattleMutableState)
+type Sell func(state *BattleState)
 
-func NothingSell(state *BattleMutableState) {}
+func NothingSell(state *BattleState) {}
 
-type Buy func(state *BattleMutableState)
+type Buy func(state *BattleState)
 
-func NothingBuy(state *BattleMutableState) {}
+func NothingBuy(state *BattleState) {}
 
-type FriendSummoned func(state *BattleMutableState)
+type FriendSummoned func(state *BattleState)
 
-func NothingFriendSummoned(state *BattleMutableState) {}
+func NothingFriendSummoned(state *BattleState) {}
 
-type BattleStart func(state *BattleMutableState) bool
+type BattleStart func(state *BattleState) bool
 
-func NothingBattleStart(state *BattleMutableState) bool { return false }
+func NothingBattleStart(state *BattleState) bool { return false }
 
 func RandomPet(level int) (Pet, error) {
 	choices := []string{Ant, Fish, Bever, Otter, Cricket, Duck, Horse, Mosquito, Pig}
@@ -108,6 +108,27 @@ func RandomPet(level int) (Pet, error) {
 	return CreatePet(choices[0])
 }
 
+// ClonePet is used when we start a battle by cloning
+// each pet so we can mutate its state in the battle without affecting
+// the team, since actions in the battle do not apply after it
+func ClonePet(p Pet) Pet {
+	return Pet{
+		tier:           p.tier,
+		name:           p.name,
+		baseAttack:     p.baseAttack,
+		baseHealth:     p.baseHealth,
+		currentLevel:   p.currentLevel,
+		experience:     p.experience,
+		faint:          p.faint,
+		faintBuy:       p.faintBuy,
+		levelup:        p.levelup,
+		sell:           p.sell,
+		buy:            p.buy,
+		friendSummoned: p.friendSummoned,
+		battleStart:    p.battleStart,
+	}
+}
+
 func CreatePet(name string) (Pet, error) {
 	switch name {
 	case Ant:
@@ -116,8 +137,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Ant,
 			baseAttack:     2,
 			baseHealth:     1,
-			currentAttack:  2,
-			currentHealth:  1,
 			currentLevel:   1,
 			experience:     0,
 			faint:          AntFaint,
@@ -133,8 +152,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Fish,
 			baseAttack:     2,
 			baseHealth:     2,
-			currentAttack:  2,
-			currentHealth:  2,
 			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
@@ -150,8 +167,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Bever,
 			baseAttack:     3,
 			baseHealth:     2,
-			currentAttack:  3,
-			currentHealth:  2,
 			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
@@ -167,8 +182,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Otter,
 			baseAttack:     1,
 			baseHealth:     2,
-			currentAttack:  1,
-			currentHealth:  2,
 			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
@@ -184,8 +197,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Sloth,
 			baseAttack:     1,
 			baseHealth:     1,
-			currentAttack:  1,
-			currentHealth:  1,
 			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
@@ -201,8 +212,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Cricket,
 			baseAttack:     1,
 			baseHealth:     2,
-			currentAttack:  1,
-			currentHealth:  2,
 			currentLevel:   1,
 			experience:     0,
 			faint:          CricketFaint,
@@ -218,8 +227,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Duck,
 			baseAttack:     2,
 			baseHealth:     3,
-			currentAttack:  2,
-			currentHealth:  3,
 			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
@@ -235,8 +242,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Horse,
 			baseAttack:     2,
 			baseHealth:     1,
-			currentAttack:  2,
-			currentHealth:  1,
 			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
@@ -252,8 +257,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Mosquito,
 			baseAttack:     2,
 			baseHealth:     2,
-			currentAttack:  2,
-			currentHealth:  2,
 			currentLevel:   2,
 			experience:     0,
 			faint:          NothingFaint,
@@ -269,8 +272,6 @@ func CreatePet(name string) (Pet, error) {
 			name:           Pig,
 			baseAttack:     4,
 			baseHealth:     1,
-			currentAttack:  4,
-			currentHealth:  1,
 			currentLevel:   2,
 			experience:     0,
 			faint:          NothingFaint,
@@ -285,7 +286,7 @@ func CreatePet(name string) (Pet, error) {
 	return Pet{}, nil
 }
 
-func AntFaint(state *BattleMutableState) bool {
+func AntFaint(state *BattleState) bool {
 	if !state.pet.Fainted() { // have not fainted so return
 		return false
 	}
@@ -311,21 +312,21 @@ func AntFaint(state *BattleMutableState) bool {
 	// buff the choice
 	switch state.pet.currentLevel {
 	case 1:
-		t.currentAttack += 2
-		t.currentHealth += 1
+		t.baseAttack += 2
+		t.baseHealth += 1
 	case 2:
-		t.currentAttack += 4
-		t.currentHealth += 2
+		t.baseAttack += 4
+		t.baseHealth += 2
 	case 3:
-		t.currentAttack += 6
-		t.currentHealth += 3
+		t.baseAttack += 6
+		t.baseHealth += 3
 	}
 
 	state.pet.faintCalled = true
 	return true
 }
 
-func CricketFaint(state *BattleMutableState) bool {
+func CricketFaint(state *BattleState) bool {
 	if !state.pet.Fainted() { // have not fainted so return
 		return false
 	}
@@ -337,15 +338,15 @@ func CricketFaint(state *BattleMutableState) bool {
 
 	// update so that this pet becomes a 1/1 zombie cricket
 	state.pet.name = ZombieCricket
-	state.pet.currentAttack = 1
-	state.pet.currentHealth = 1
+	state.pet.baseAttack = 1
+	state.pet.baseHealth = 1
 	state.pet.faint = NothingFaint
 	state.pet.faintCalled = true
 
 	return true
 }
 
-func FishLevelUp(state *BattleMutableState) {
+func FishLevelUp(state *BattleState) {
 	// Level-up: Give all friends +1/+1
 	buff := 1
 	if state.pet.currentLevel > 1 {
@@ -353,12 +354,12 @@ func FishLevelUp(state *BattleMutableState) {
 	}
 
 	for i := 0; i < len(*state.friends); i++ {
-		(*state.friends)[i].currentHealth += buff
-		(*state.friends)[i].currentAttack += buff
+		(*state.friends)[i].baseHealth += buff
+		(*state.friends)[i].baseAttack += buff
 	}
 }
 
-func BeverSell(state *BattleMutableState) {
+func BeverSell(state *BattleState) {
 	// Sell: Give two random friends +1 health
 	buff := 1
 	switch state.pet.currentLevel {
@@ -372,20 +373,20 @@ func BeverSell(state *BattleMutableState) {
 	t1 := (*state.friends)[rand.Intn(len(*state.friends))]
 	t2 := (*state.friends)[rand.Intn(len(*state.friends))]
 
-	t1.currentHealth += buff
-	t2.currentHealth += buff
+	t1.baseHealth += buff
+	t2.baseHealth += buff
 }
 
-func DuckSell(state *BattleMutableState) {}
+func DuckSell(state *BattleState) {}
 
-func PigSell(state *BattleMutableState) {}
+func PigSell(state *BattleState) {}
 
-func OtterBuy(state *BattleMutableState) {}
+func OtterBuy(state *BattleState) {}
 
-func HorseFriendSummoned(state *BattleMutableState) {
+func HorseFriendSummoned(state *BattleState) {
 }
 
-func MosquitoBattleStart(state *BattleMutableState) bool {
+func MosquitoBattleStart(state *BattleState) bool {
 	// Start of battle: Deal 1 damage to a random enemy
 	choices := nonFaintedIndex(*state.foes)
 
@@ -401,7 +402,7 @@ func MosquitoBattleStart(state *BattleMutableState) bool {
 	(*state.foes)[choices[0]].TakeDamage(1)
 	// now call its fainted function just in case
 	// TODO would it be cleaner to call this after?
-	(*state.foes)[choices[0]].faint(&BattleMutableState{
+	(*state.foes)[choices[0]].faint(&BattleState{
 		pet:     &(*state.foes)[choices[0]],
 		friends: state.foes,
 		foes:    state.friends,
