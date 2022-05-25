@@ -42,4 +42,33 @@ func main() {
 			foes:    &rightPets,
 		})
 	}
+
+	fmt.Println(CreateShop(1))
+
+	// ok given a shop what states do we have that the network needs...
+
+	// pet for sale 3 * 5 (15 inputs)
+	//	type
+	//	attack
+	//	health
+	//
+	// item for sale (3 inputs)
+	// 	type
+	//
+	// pets in team 3 * 5 (15 inputs)
+	//	type
+	//	attack
+	//	health
+	//
+	// gold (1 input)
+
+	// actions we can take
+
+	// decision (what are we doing? 1 output)
+	// sell pet in team (1 output divided by 5 to determine who should we sell)
+	//   1-5
+	// buy item and apply to pet in team (or all of them) 1 output to determine who we should sell
+	//   1-5
+	// buy pet from shop and put on another pet (if same) or in space on team (if space) (2 outputs, who to buy and where to put)
+	//   1-5
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkBattle(b *testing.B) {
-	//_ = os.Remove("profile.pprof") // remove so we always get a fresh one
+	//_ = os.Remove("profile.pprof") // removePet so we always get a fresh one
 	//f, _ := os.Create("profile.pprof")
 	//_ = pprof.StartCPUProfile(f)
 	//defer pprof.StopCPUProfile()

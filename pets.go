@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"math/rand"
 )
 
@@ -257,7 +258,7 @@ func CreatePet(name string) (Pet, error) {
 			name:           Mosquito,
 			baseAttack:     2,
 			baseHealth:     2,
-			currentLevel:   2,
+			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
@@ -272,7 +273,7 @@ func CreatePet(name string) (Pet, error) {
 			name:           Pig,
 			baseAttack:     4,
 			baseHealth:     1,
-			currentLevel:   2,
+			currentLevel:   1,
 			experience:     0,
 			faint:          NothingFaint,
 			levelup:        NothingLevelUp,
@@ -283,7 +284,7 @@ func CreatePet(name string) (Pet, error) {
 		}, nil
 	}
 
-	return Pet{}, nil
+	return Pet{}, errors.New("unknown pet")
 }
 
 func AntFaint(state *BattleState) bool {
