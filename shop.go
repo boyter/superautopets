@@ -16,6 +16,10 @@ func (s *ShopState) BuyPet(i int) (Pet, error) {
 		return Pet{}, errors.New("not enough gold")
 	}
 
+	if i > len(s.pets) {
+		return Pet{}, errors.New("out of bounds")
+	}
+
 	p := s.pets[i]
 	s.pets = removePet(s.pets, i)
 	s.gold -= 3
@@ -28,10 +32,32 @@ func (s *ShopState) BuyItem(i int) (Item, error) {
 		return Item{}, errors.New("not enough gold")
 	}
 
+	if i > len(s.items) {
+		return Item{}, errors.New("out of bounds")
+	}
+
 	p := s.items[i]
 	s.items = removeItem(s.items, i)
 	s.gold -= 3
 	return p, nil
+}
+
+func (s *ShopState) Roll(round int) {
+	s.pets = []Pet{}
+	s.items = []Item{}
+
+	pet, _ := RandomPet(1)
+	s.pets = append(s.pets, pet)
+	pet, _ = RandomPet(1)
+	s.pets = append(s.pets, pet)
+	pet, _ = RandomPet(1)
+	s.pets = append(s.pets, pet)
+
+	// TODO apply modifiers if someone has used canned food to level every pet up
+	// TODO apply modifiers such as swan which adds gold
+
+	item, _ := RandomItem(1)
+	s.items = append(s.items, item)
 }
 
 // CreateShop

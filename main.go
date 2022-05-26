@@ -79,13 +79,17 @@ func main() {
 	shop := CreateShop(1)
 
 	rBot := RandomBot{}
-	for i := 0; i < 100; i++ {
-		fmt.Println(rBot.Decision(shop))
-		fmt.Println(shop.BuyPet(0))
-	}
+	for i := 0; i < 10; i++ {
+		decision := rBot.Decision(shop)
 
-	for i := 0; i < 100; i++ {
-		shop.BuyPet(0)
+		switch decision.Decision {
+		case DecisionBuyPet:
+			shop.BuyPet(0)
+		case DecisionSellPet:
+		case DecisionBuyItem:
+			shop.BuyItem(0)
+		case DecisionRoll:
+			shop.Roll(1)
+		}
 	}
-
 }
