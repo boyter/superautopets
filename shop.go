@@ -11,7 +11,7 @@ type ShopState struct {
 }
 
 // BuyPet removes pet from the shop and returns it
-func (s ShopState) BuyPet(i int) (Pet, error) {
+func (s *ShopState) BuyPet(i int) (Pet, error) {
 	if s.gold < 3 {
 		return Pet{}, errors.New("not enough gold")
 	}
@@ -23,7 +23,7 @@ func (s ShopState) BuyPet(i int) (Pet, error) {
 }
 
 // BuyItem removes item from the shop and returns it
-func (s ShopState) BuyItem(i int) (Item, error) {
+func (s *ShopState) BuyItem(i int) (Item, error) {
 	if s.gold < 3 {
 		return Item{}, errors.New("not enough gold")
 	}
