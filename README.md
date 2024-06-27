@@ -1,5 +1,7 @@
 # superautopets
 
+NB this is more or less abandoned. Keeping it around just for reference.
+
 https://superauto.pet <--- not good don't use
 https://superautopets.fandom.com/wiki/Pets <--- pet details
 https://github.com/yaricom/goNEAT/blob/master/executor.go
